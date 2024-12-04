@@ -2,27 +2,10 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Cursor, Result, Seek, SeekFrom};
 use std::path::Path;
 
+use crate::buf_read_ext::BufReadExt;
+
 const ARC_MAGIC: u32 = 4411969;
 const SUPPORTED_VERSIONS: [u32; 1] = [3];
-
-trait BufReadExt {
-    fn read_u32(&mut self) -> Result<u32>;
-    fn read_u64(&mut self) -> Result<u64>;
-}
-
-impl<R: BufRead> BufReadExt for R {
-    fn read_u32(&mut self) -> Result<u32> {
-        let mut buf = [0u8; 4];
-        self.read_exact(&mut buf)?;
-        Ok(u32::from_le_bytes(buf))
-    }
-
-    fn read_u64(&mut self) -> Result<u64> {
-        let mut buf = [0u8; 8];
-        self.read_exact(&mut buf)?;
-        Ok(u64::from_le_bytes(buf))
-    }
-}
 
 #[allow(dead_code)]
 pub struct Archive<T> {
@@ -222,7 +205,6 @@ impl Archive<Cursor<&'static [u8]>> {
 }
 
 impl Archive<BufReader<File>> {
-    #[allow(dead_code)]
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = BufReader::new(File::open(path)?);
         Self::from(file)
