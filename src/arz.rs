@@ -21,7 +21,7 @@ pub struct Database<T> {
     string_table_len: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RawRecord {
     string_index: u32,
     kind: String,
@@ -90,6 +90,21 @@ impl From<Vec<bool>> for DatabaseValue {
 }
 
 impl<R: BufRead + Seek> Database<R> {
+    pub fn get(&mut self, id: &str) -> Result<Record> {
+        let records = self.iter_records()?.collect::<Result<Vec<_>>>()?;
+        let record = records
+            .iter()
+            .find(|raw| {
+                self.record_id(raw)
+                    .ok()
+                    .map(|record_id| record_id == id)
+                    .unwrap_or(false)
+            })
+            .cloned()
+            .ok_or_else(|| std::io::Error::other(format!("Not found: {id}")))?;
+        self.resolve(record)
+    }
+
     pub fn resolve(&mut self, raw: RawRecord) -> Result<Record> {
         let id = self.lookup_str(raw.string_index as usize)?;
         let kind = raw.kind;
