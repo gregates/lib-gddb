@@ -66,4 +66,15 @@ mod tests {
             arz.resolve(raw.unwrap()).unwrap();
         }
     }
+
+    #[test]
+    fn parse_foa_game_database() {
+        let mut arz = Database::open("database/GDX3.arz").unwrap();
+
+        let raws = arz.iter_records().unwrap().collect::<Vec<_>>();
+
+        for raw in raws {
+            arz.resolve(raw.unwrap()).unwrap();
+        }
+    }
 }
