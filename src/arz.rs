@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Cursor, Result, Seek, SeekFrom};
 use std::path::Path;
@@ -47,6 +48,57 @@ pub enum DatabaseValue {
     Floats(Vec<f32>),
     Strings(Vec<String>),
     Bools(Vec<bool>),
+}
+
+impl fmt::Display for DatabaseValue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Int(i) => write!(f, "{i}"),
+            Self::Float(n) => write!(f, "{n}"),
+            Self::String(s) => write!(f, "{s}"),
+            Self::Bool(b) => write!(f, "{b}"),
+            Self::Ints(is) => {
+                for i in 0..is.len() {
+                    if is.len() > 1 && i < is.len() - 1 {
+                        write!(f, "{},", is[i])?;
+                    } else {
+                        write!(f, "{}", is[i])?;
+                    }
+                }
+                Ok(())
+            }
+            Self::Floats(ns) => {
+                for i in 0..ns.len() {
+                    if ns.len() > 1 && i < ns.len() - 1 {
+                        write!(f, "{},", ns[i])?;
+                    } else {
+                        write!(f, "{}", ns[i])?;
+                    }
+                }
+                Ok(())
+            }
+            Self::Strings(ss) => {
+                for i in 0..ss.len() {
+                    if ss.len() > 1 && i < ss.len() - 1 {
+                        write!(f, "{},", ss[i])?;
+                    } else {
+                        write!(f, "{}", ss[i])?;
+                    }
+                }
+                Ok(())
+            }
+            Self::Bools(bs) => {
+                for i in 0..bs.len() {
+                    if bs.len() > 1 && i < bs.len() - 1 {
+                        write!(f, "{},", bs[i])?;
+                    } else {
+                        write!(f, "{}", bs[i])?;
+                    }
+                }
+                Ok(())
+            }
+        }
+    }
 }
 
 impl From<Vec<f32>> for DatabaseValue {
