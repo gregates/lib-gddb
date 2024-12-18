@@ -38,7 +38,19 @@ pub struct Record {
     pub data: HashMap<String, DatabaseValue>,
 }
 
-#[derive(Debug)]
+impl fmt::Display for Record {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "========")?;
+        writeln!(f, "{}", self.id)?;
+        writeln!(f, "{}", self.kind)?;
+        for (key, val) in self.data.iter() {
+            writeln!(f, "  {}={}", key, val)?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum DatabaseValue {
     Int(u32),
     Float(f32),
