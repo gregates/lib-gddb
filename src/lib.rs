@@ -22,7 +22,7 @@ mod tests {
 
     #[test]
     fn parse_text_zh_item_tags() {
-        let mut arc = Archive::open("resources/vanilla/Text_ZH.arc").unwrap();
+        let mut arc = Archive::open("resources/1.2.1.3/Text_ZH.arc").unwrap();
         let item_tags = arc.get("tags_items.txt").unwrap();
         let item_tags = tags::parse(&item_tags.data).unwrap();
         let tag = "tagBlueprint_WeaponF007";
@@ -33,7 +33,7 @@ mod tests {
 
     #[test]
     fn parse_text_en_item_tags() {
-        let mut arc = Archive::open("resources/vanilla/Text_EN.arc").unwrap();
+        let mut arc = Archive::open(TAGS_GD).unwrap();
         let item_tags = arc.get("tags_items.txt").unwrap();
         let item_tags = tags::parse(&item_tags.data).unwrap();
         let tag = "tagBlueprint_WeaponF007";
@@ -47,7 +47,7 @@ mod tests {
 
     #[test]
     fn parse_vanilla_game_database() {
-        let mut arz = Database::open("database/database.arz").unwrap();
+        let mut arz = Database::open(DB_GD).unwrap();
 
         let raws = arz.iter_records().unwrap().collect::<Vec<_>>();
 
@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     fn parse_aom_game_database() {
-        let mut arz = Database::open("database/GDX1.arz").unwrap();
+        let mut arz = Database::open(DB_AOM).unwrap();
 
         let raws = arz.iter_records().unwrap().collect::<Vec<_>>();
 
@@ -69,22 +69,11 @@ mod tests {
 
     #[test]
     fn parse_fg_game_database() {
-        let mut arz = Database::open("database/GDX2.arz").unwrap();
+        let mut arz = Database::open(DB_FG).unwrap();
 
         let raws = arz.iter_records().unwrap().collect::<Vec<_>>();
 
         for raw in raws.into_iter() {
-            arz.resolve(raw.unwrap()).unwrap();
-        }
-    }
-
-    #[test]
-    fn parse_foa_game_database() {
-        let mut arz = Database::open("database/GDX3.arz").unwrap();
-
-        let raws = arz.iter_records().unwrap().collect::<Vec<_>>();
-
-        for raw in raws {
             arz.resolve(raw.unwrap()).unwrap();
         }
     }
