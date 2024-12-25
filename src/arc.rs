@@ -67,9 +67,9 @@ impl<R: BufRead + Seek> Archive<R> {
         match result {
             Some((i, id)) => {
                 let id = id?;
-                let metadata_result = self.iter_metadata()?.enumerate().find(|(j, _)| i == *j);
+                let metadata_result = self.iter_metadata()?.find(|metadata| i as u32 == metadata.as_ref().unwrap().index);
                 metadata_result
-                    .map(|(_, metadata)| self.get_inner(metadata?, &id))
+                    .map(|metadata| self.get_inner(metadata?, &id))
                     .ok_or_else(|| std::io::Error::other(format!("Failed to get {id}")))?
             }
             None => Err(std::io::Error::other(format!("Failed to get {id}"))),
