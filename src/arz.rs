@@ -40,9 +40,9 @@ pub struct Record {
 
 impl fmt::Display for Record {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "========")?;
-        writeln!(f, "{}", self.id)?;
-        writeln!(f, "{}", self.kind)?;
+        writeln!(f, "id: {}", self.id)?;
+        writeln!(f, "kind: {}", self.kind)?;
+        writeln!(f, "=======================")?;
         for (key, val) in self.data.iter() {
             writeln!(f, "  {}={}", key, val)?;
         }
