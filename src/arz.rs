@@ -25,7 +25,7 @@ pub struct Database<T> {
 #[derive(Debug, Clone)]
 pub struct RawRecord {
     string_index: u32,
-    kind: String,
+    pub kind: String,
     offset: u32,
     compressed_len: u32,
     uncompressed_len: u32,
@@ -60,6 +60,31 @@ pub enum DatabaseValue {
     Floats(Vec<f32>),
     Strings(Vec<String>),
     Bools(Vec<bool>),
+}
+
+impl DatabaseValue {
+    pub fn as_string(&self) -> Option<String> {
+        match self {
+            Self::String(s) => Some(s.clone()),
+            _ => None,
+        }
+    }
+
+    pub fn as_float(&self) -> Option<f32> {
+        match self {
+            Self::Int(i) => Some(*i as f32),
+            Self::Float(n) => Some(*n),
+            _ => None,
+        }
+    }
+
+    pub fn as_int(&self) -> Option<u32> {
+        match self {
+            Self::Int(i) => Some(*i),
+            Self::Float(n) => Some(*n as u32),
+            _ => None,
+        }
+    }
 }
 
 impl fmt::Display for DatabaseValue {

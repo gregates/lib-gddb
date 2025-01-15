@@ -25,7 +25,11 @@ impl From<Record> for Affix {
     fn from(record: Record) -> Self {
         Self {
             id: record.id.clone(),
-            tag: record.data.get("lootRandomizerName").unwrap().to_string(),
+            tag: record
+                .data
+                .get("lootRandomizerName")
+                .map(|val| val.as_string().unwrap())
+                .unwrap_or_else(|| record.id.clone()),
             description: record.data.get("FileDescription").map(|desc| desc.to_string()),
             record,
         }
