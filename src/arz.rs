@@ -31,7 +31,7 @@ pub struct RawRecord {
     uncompressed_len: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Record {
     pub id: String,
     pub kind: String,

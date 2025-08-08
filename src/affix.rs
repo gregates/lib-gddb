@@ -6,6 +6,7 @@ use crate::arz::Record;
 pub const PREFIX_PATH: &str = "records/items/lootaffixes/prefix/";
 pub const SUFFIX_PATH: &str = "records/items/lootaffixes/suffix/";
 
+#[derive(Debug, Clone)]
 pub struct Affix {
     pub id: String,
     pub tag: String,
