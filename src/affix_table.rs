@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+
+use crate::affix::Affix;
 use crate::arz::Record;
 use crate::rollable::RollableItem;
 use crate::util::ensure_len;
@@ -11,6 +14,24 @@ const MAX: &str = "randomizerLevelMax";
 pub struct AffixTable {
     pub id: String,
     pub loot_randomizers: Vec<RollableItem>,
+}
+
+impl AffixTable {
+    pub fn resolve<'a>(&self, level: u32, affixes: &HashMap<String, &'a Affix>) -> Vec<(&'a Affix, f32)> {
+        let total = self.loot_randomizers
+            .iter()
+            .filter(|rollable| rollable.level_range.contains(&level))
+            .map(|rollable| rollable.weight)
+            .sum::<f32>();
+        self.loot_randomizers
+            .iter()
+            .filter(|rollable| rollable.level_range.contains(&level))
+            .map(|rollable| {
+                let affix = affixes.get(&rollable.id).expect(&format!("Missing affix: {}", rollable.id));
+                (*affix, rollable.weight / total)
+            })
+            .collect()
+    }
 }
 
 impl From<&Record> for AffixTable {
