@@ -15,10 +15,10 @@ pub struct Affix {
 }
 
 impl Affix {
-    pub fn localize(&self, tags: &HashMap<String, String>) -> String {
+    pub fn localize<'a>(&'a self, tags: &'a HashMap<String, String>) -> &'a str {
         tags.get(&self.tag)
-            .map(|s| s.to_string())
-            .unwrap_or_else(|| self.tag.clone())
+            .map(|s| s.as_str())
+            .unwrap_or_else(|| self.tag.as_str())
     }
 }
 

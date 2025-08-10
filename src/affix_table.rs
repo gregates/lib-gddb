@@ -17,18 +17,18 @@ pub struct AffixTable {
 }
 
 impl AffixTable {
-    pub fn resolve<'a>(&self, level: u32, affixes: &HashMap<String, &'a Affix>) -> Vec<(&'a Affix, f32)> {
+    pub fn resolve<'a>(&self, level: u32, affixes: &HashMap<String, &'a Affix>) -> Vec<(&'a Affix, f64)> {
         let total = self.loot_randomizers
             .iter()
             .filter(|rollable| rollable.level_range.contains(&level))
-            .map(|rollable| rollable.weight)
-            .sum::<f32>();
+            .map(|rollable| rollable.weight as f64)
+            .sum::<f64>();
         self.loot_randomizers
             .iter()
             .filter(|rollable| rollable.level_range.contains(&level))
             .map(|rollable| {
                 let affix = affixes.get(&rollable.id).expect(&format!("Missing affix: {}", rollable.id));
-                (*affix, rollable.weight / total)
+                (*affix, rollable.weight as f64 / total)
             })
             .collect()
     }
@@ -52,7 +52,7 @@ impl From<&Record> for AffixTable {
                 let i = key[MIN.len()..].parse::<usize>().unwrap() - 1;
                 ensure_len!(ranges, i, 0..1);
                 let min = value.as_int().unwrap();
-                ranges[i] = min..ranges[i].end.min(min + 1);
+                ranges[i] = min..ranges[i].end.max(min + 1);
             } else if key.starts_with(MAX) {
                 let i = key[MAX.len()..].parse::<usize>().unwrap() - 1;
                 ensure_len!(ranges, i, 0..1);
