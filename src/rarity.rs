@@ -33,7 +33,7 @@ impl FromStr for Rarity {
             "Magical" | "magical" => Ok(Self::Magic),
             "Rare" | "rare" => Ok(Self::Rare),
             "Epic" | "epic" => Ok(Self::Epic),
-            "Legendary" | "legendary" => Ok(Self::Rare),
+            "Legendary" | "legendary" => Ok(Self::Legendary),
             _ => Ok(Self::Unknown),
         }
     }
