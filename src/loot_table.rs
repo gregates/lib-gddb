@@ -46,9 +46,10 @@ impl LootTable {
         affix_lookup: &HashMap<String, &'a Affix>,
     ) -> Vec<(Option<&'a Affix>, Option<&'a Affix>, f64)> {
         let modified_combo_chances = (&self.combo_weights * modifiers).normalize();
-        AffixCombo::iter()
+        let result = AffixCombo::iter()
             .flat_map(|combo| self.resolve_combo(level, combo, modified_combo_chances.get(combo), affix_table_lookup, affix_lookup))
-            .collect::<Vec<_>>()
+            .collect::<Vec<_>>();
+        return result;
     }
 
     pub fn resolve_prefix<'a>(
@@ -237,7 +238,9 @@ impl LootTable {
         affix_table_lookup: &HashMap<String, AffixTable>,
         affix_lookup: &HashMap<String, &'a Affix>,
     ) -> Vec<(&'a Affix, f64)> {
-        let total = rollable_tables.iter().map(|rollable| rollable.weight as f64).sum::<f64>();
+        let total = rollable_tables.iter()
+            .filter(|rollable| rollable.level_range.contains(&level))
+            .map(|rollable| rollable.weight as f64).sum::<f64>();
         rollable_tables
             .iter()
             .filter(|rollable| rollable.level_range.contains(&level))
