@@ -7,6 +7,8 @@ use crate::arz::Record;
 use crate::rollable::RollableItem;
 use crate::util::ensure_len;
 
+const LOOT_NAME: &str = "lootName";
+const LOOT_WEIGHT: &str = "lootWeight";
 const PREFIX_TABLE_NAME: &str = "prefixTableName";
 const PREFIX_TABLE_WEIGHT: &str = "prefixTableWeight";
 const PREFIX_TABLE_MIN: &str = "prefixTableLevelMin";
@@ -23,7 +25,6 @@ const RARE_SUFFIX_TABLE_NAME: &str = "rareSuffixTableName";
 const RARE_SUFFIX_TABLE_WEIGHT: &str = "rareSuffixTableWeight";
 const RARE_SUFFIX_TABLE_MIN: &str = "rareSuffixTableLevelMin";
 const RARE_SUFFIX_TABLE_MAX: &str = "rareSuffixTableLevelMax";
-
 
 #[derive(Debug, Clone)]
 pub struct LootTable {
@@ -274,7 +275,6 @@ impl From<&Record> for LootTable {
     fn from(record: &Record) -> Self {
         let mut loots = vec![];
         let mut loot_weights = vec![];
-        let mut loot_ranges = vec![];
         let mut prefix_tables = vec![];
         let mut prefix_table_weights = vec![];
         let mut prefix_table_ranges = vec![];
@@ -365,14 +365,21 @@ impl From<&Record> for LootTable {
                 ensure_len!(rare_suffix_table_ranges, i, 0..1);
                 let max = value.as_int().unwrap();
                 rare_suffix_table_ranges[i] = rare_suffix_table_ranges[i].start..max;
+            } else if key.starts_with(LOOT_NAME) {
+                let i = key[LOOT_NAME.len()..].parse::<usize>().unwrap() - 1;
+                ensure_len!(loots, i, "".to_string());
+                loots[i] = value.as_string().unwrap();
+            } else if key.starts_with(LOOT_WEIGHT) {
+                let i = key[LOOT_WEIGHT.len()..].parse::<usize>().unwrap() - 1;
+                ensure_len!(loot_weights, i, 0f32);
+                loot_weights[i] = value.as_float().unwrap();
             }
         }
 
         let loots = loots.into_iter()
             .zip(loot_weights.into_iter())
-            .zip(loot_ranges.into_iter())
-            .map(|((id, weight), level_range)| RollableItem {
-                id, weight, level_range,
+            .map(|(id, weight)| RollableItem {
+                id, weight, level_range: 0..500,
             })
             .collect::<Vec<_>>();
 

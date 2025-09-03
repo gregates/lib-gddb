@@ -4,6 +4,7 @@ pub mod affix_table;
 pub mod arc;
 pub mod arz;
 mod buf_read_ext;
+pub mod item;
 pub mod loot_table;
 pub mod rollable;
 pub mod tags;
