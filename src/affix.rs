@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::fmt;
-use std::str::FromStr;
 
 use crate::arz::Record;
+use crate::rarity::Rarity;
 
 pub const PREFIX_PATH: &str = "records/items/lootaffixes/prefix/";
 pub const SUFFIX_PATH: &str = "records/items/lootaffixes/suffix/";
@@ -14,38 +14,9 @@ const AFFIX_RARITY: &str = "itemClassification";
 pub struct Affix {
     pub id: String,
     pub tag: String,
-    pub rarity: AffixRarity,
+    pub rarity: Rarity,
     pub description: Option<String>,
     pub record: Record,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum AffixRarity {
-    Unknown,
-    Magic,
-    Rare,
-}
-
-impl fmt::Display for AffixRarity {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Unknown => write!(f, "err: unknown value for affix rarity"),
-            Self::Magic => write!(f, "magic"),
-            Self::Rare => write!(f, "rare"),
-        }
-    }
-}
-
-impl FromStr for AffixRarity {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "Magical" | "magical" => Ok(Self::Magic),
-            "Rare" | "rare" => Ok(Self::Rare),
-            _ => Ok(Self::Unknown),
-        }
-    }
 }
 
 impl Affix {
@@ -71,10 +42,10 @@ impl From<Record> for Affix {
                 .map(|rarity| rarity
                     .as_string()
                     .unwrap()
-                    .parse::<AffixRarity>()
+                    .parse::<Rarity>()
                     .unwrap()
                 )
-                .unwrap_or(AffixRarity::Unknown),
+                .unwrap_or(Rarity::Unknown),
             description: record.data.get("FileDescription").map(|desc| desc.to_string()),
             record,
         }

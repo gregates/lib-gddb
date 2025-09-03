@@ -6,6 +6,7 @@ pub mod arz;
 mod buf_read_ext;
 pub mod item;
 pub mod loot_table;
+pub mod rarity;
 pub mod rollable;
 pub mod tags;
 mod util;
