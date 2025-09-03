@@ -12,13 +12,13 @@ pub struct Item {
 
 impl From<&Record> for Item {
     fn from(record: &Record) -> Self {
-        let tag = record.data.get(ITEM_TAG).expect("Item {id} had no {ITEM_NAME_TAG");
-        let level = record.data.get(ITEM_LEVEL).expect("Item {id} had no {ITEM_NAME_TAG");
+        let tag = record.data.get(ITEM_TAG).map(|s| s.as_string().unwrap()).unwrap_or(record.id.clone());
+        let level = record.data.get(ITEM_LEVEL).map(|i| i.as_int().unwrap()).expect(&format!("Item {} had no {}", record.id, ITEM_LEVEL));
 
         Self {
             id: record.id.clone(),
-            tag: tag.as_string().unwrap(),
-            level: level.as_int().unwrap(),
+            tag,
+            level,
         }
     }
 }
