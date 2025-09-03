@@ -7,6 +7,7 @@ pub enum Rarity {
     Common,
     Magic,
     Rare,
+    Epic,
     Legendary
 }
 
@@ -17,6 +18,7 @@ impl fmt::Display for Rarity {
             Self::Common => write!(f, "common"),
             Self::Magic => write!(f, "magic"),
             Self::Rare => write!(f, "rare"),
+            Self::Epic => write!(f, "epic"),
             Self::Legendary => write!(f, "legendary"),
         }
     }
@@ -30,6 +32,7 @@ impl FromStr for Rarity {
             "Common" | "common" => Ok(Self::Common),
             "Magical" | "magical" => Ok(Self::Magic),
             "Rare" | "rare" => Ok(Self::Rare),
+            "Epic" | "epic" => Ok(Self::Epic),
             "Legendary" | "legendary" => Ok(Self::Rare),
             _ => Ok(Self::Unknown),
         }
