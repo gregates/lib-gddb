@@ -45,7 +45,7 @@ impl LootTable {
         affix_table_lookup: &HashMap<String, AffixTable>,
         affix_lookup: &HashMap<String, &'a Affix>,
     ) -> Vec<(Option<&'a Affix>, Option<&'a Affix>, f64)> {
-        let modified_combo_chances = (&self.combo_weights * modifiers).normalize();
+        let modified_combo_chances = (&self.combo_weights.percentage_increase_modify(modifiers)).normalize();
         let result = AffixCombo::iter()
             .flat_map(|combo| self.resolve_combo(level, combo, modified_combo_chances.get(combo), affix_table_lookup, affix_lookup))
             .collect::<Vec<_>>();

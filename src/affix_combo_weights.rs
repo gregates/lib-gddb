@@ -160,6 +160,14 @@ impl AffixComboWeights {
         }
         AffixComboWeights(new)
     }
+
+    pub fn percentage_increase_modify(&self, rhs: &Self) -> Self {
+        let mut new = [0f32; 10];
+        for i in 0..self.0.len() {
+            new[i] = self.0[i] * (1.0 + rhs.0[i] / 100.0);
+        }
+        AffixComboWeights(new)
+    }
 }
 
 impl std::ops::Mul for &AffixComboWeights {
