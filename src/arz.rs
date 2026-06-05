@@ -1,8 +1,9 @@
-use std::collections::HashMap;
 use std::fmt;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Cursor, Result, Seek, SeekFrom};
 use std::path::Path;
+
+use indexmap::IndexMap;
 
 use crate::buf_read_ext::BufReadExt;
 
@@ -35,7 +36,7 @@ pub struct RawRecord {
 pub struct Record {
     pub id: String,
     pub kind: String,
-    pub data: HashMap<String, DatabaseValue>,
+    pub data: IndexMap<String, DatabaseValue>,
 }
 
 impl fmt::Display for Record {
@@ -195,8 +196,8 @@ impl<R: BufRead + Seek> Database<R> {
         Ok(Record { id, kind, data })
     }
 
-    fn resolve_inner(&self, data: &[u8]) -> Result<HashMap<String, DatabaseValue>> {
-        let mut result = HashMap::default();
+    fn resolve_inner(&self, data: &[u8]) -> Result<IndexMap<String, DatabaseValue>> {
+        let mut result = IndexMap::default();
         let mut buf = Cursor::new(data);
         while buf.position() < data.len() as u64 {
             let kind = buf.read_u16()?;
