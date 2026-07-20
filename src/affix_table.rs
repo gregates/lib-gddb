@@ -18,7 +18,8 @@ pub struct AffixTable {
 
 impl AffixTable {
     pub fn resolve<'a>(&self, level: u32, affixes: &HashMap<String, &'a Affix>) -> Vec<(&'a Affix, f64)> {
-        let total = self.loot_randomizers
+        let total = self
+            .loot_randomizers
             .iter()
             .filter(|rollable| rollable.level_range.contains(&level))
             .map(|rollable| rollable.weight as f64)
@@ -27,7 +28,9 @@ impl AffixTable {
             .iter()
             .filter(|rollable| rollable.level_range.contains(&level))
             .map(|rollable| {
-                let affix = affixes.get(&rollable.id).expect(&format!("Missing affix: {}", rollable.id));
+                let affix = affixes
+                    .get(&rollable.id)
+                    .expect(&format!("Missing affix: {}", rollable.id));
                 (*affix, rollable.weight as f64 / total)
             })
             .collect()
@@ -61,11 +64,14 @@ impl From<&Record> for AffixTable {
             }
         }
 
-        let loot_randomizers = affixes.into_iter()
+        let loot_randomizers = affixes
+            .into_iter()
             .zip(weights.into_iter())
             .zip(ranges.into_iter())
             .map(|((id, weight), level_range)| RollableItem {
-                id, weight, level_range,
+                id,
+                weight,
+                level_range,
             })
             .collect::<Vec<_>>();
 

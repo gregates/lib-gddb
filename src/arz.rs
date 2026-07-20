@@ -71,6 +71,14 @@ impl DatabaseValue {
         }
     }
 
+    pub fn as_strings(&self) -> Option<Vec<String>> {
+        match self {
+            Self::String(s) => Some(vec![s.clone()]),
+            Self::Strings(ss) => Some(ss.clone()),
+            _ => None,
+        }
+    }
+
     pub fn as_float(&self) -> Option<f32> {
         match self {
             Self::Int(i) => Some(*i as f32),

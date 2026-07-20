@@ -39,12 +39,7 @@ impl From<Record> for Affix {
             rarity: record
                 .data
                 .get(AFFIX_RARITY)
-                .map(|rarity| rarity
-                    .as_string()
-                    .unwrap()
-                    .parse::<Rarity>()
-                    .unwrap()
-                )
+                .map(|rarity| rarity.as_string().unwrap().parse::<Rarity>().unwrap())
                 .unwrap_or(Rarity::Unknown),
             description: record.data.get("FileDescription").map(|desc| desc.to_string()),
             record,

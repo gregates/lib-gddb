@@ -8,7 +8,7 @@ pub enum Rarity {
     Magic,
     Rare,
     Epic,
-    Legendary
+    Legendary,
 }
 
 impl fmt::Display for Rarity {

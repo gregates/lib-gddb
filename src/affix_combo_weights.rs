@@ -200,11 +200,23 @@ impl From<&Record> for AffixComboModifiers {
                     trailing = leading;
                     is_chest = true;
                 }
-                let mob = trailing.strip_prefix("Modifier").expect("Unexpected affix combo modifier key").parse::<MobClass>().unwrap();
+                let mob = trailing
+                    .strip_prefix("Modifier")
+                    .expect("Unexpected affix combo modifier key")
+                    .parse::<MobClass>()
+                    .unwrap();
                 if is_chest {
-                    result.chests.entry((difficulty, mob)).or_default().set(combo, value.as_float().expect("Non-numeric modifier weight"));
+                    result
+                        .chests
+                        .entry((difficulty, mob))
+                        .or_default()
+                        .set(combo, value.as_float().expect("Non-numeric modifier weight"));
                 } else {
-                    result.mobs.entry((difficulty, mob)).or_default().set(combo, value.as_float().expect("Non-numeric modifier weight"));
+                    result
+                        .mobs
+                        .entry((difficulty, mob))
+                        .or_default()
+                        .set(combo, value.as_float().expect("Non-numeric modifier weight"));
                 }
             }
         }

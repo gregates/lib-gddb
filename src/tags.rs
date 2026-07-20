@@ -20,7 +20,9 @@ pub fn parse(bytes: &[u8]) -> Result<HashMap<String, String>, TagParseError> {
         line_number += 1;
         let content = line.trim();
         if !content.is_empty() && !content.starts_with('#') {
-            let (tag, value) = content.split_once('=').ok_or_else(|| TagParseError(line_number, line.clone()))?;
+            let (tag, value) = content
+                .split_once('=')
+                .ok_or_else(|| TagParseError(line_number, line.clone()))?;
             result.insert(tag.to_string(), value.to_string());
         }
         line.clear();

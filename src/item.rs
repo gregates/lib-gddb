@@ -15,9 +15,21 @@ pub struct Item {
 
 impl From<&Record> for Item {
     fn from(record: &Record) -> Self {
-        let tag = record.data.get(ITEM_TAG).map(|s| s.as_string().unwrap()).unwrap_or(record.id.clone());
-        let level = record.data.get(ITEM_LEVEL).map(|i| i.as_int().unwrap()).expect(&format!("Item {} had no {}", record.id, ITEM_LEVEL));
-        let rarity = record.data.get(ITEM_RARITY).map(|s| s.as_string().unwrap().parse::<Rarity>().unwrap()).unwrap_or(Rarity::Unknown);
+        let tag = record
+            .data
+            .get(ITEM_TAG)
+            .map(|s| s.as_string().unwrap())
+            .unwrap_or(record.id.clone());
+        let level = record
+            .data
+            .get(ITEM_LEVEL)
+            .map(|i| i.as_int().unwrap())
+            .expect(&format!("Item {} had no {}", record.id, ITEM_LEVEL));
+        let rarity = record
+            .data
+            .get(ITEM_RARITY)
+            .map(|s| s.as_string().unwrap().parse::<Rarity>().unwrap())
+            .unwrap_or(Rarity::Unknown);
 
         Self {
             id: record.id.clone(),

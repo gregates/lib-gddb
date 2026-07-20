@@ -4,6 +4,7 @@ use crate::affix::Affix;
 use crate::affix_combo_weights::{AffixCombo, AffixComboWeights};
 use crate::affix_table::AffixTable;
 use crate::arz::Record;
+use crate::ascension_affix_swap::AscensionAffixSwap;
 use crate::rollable::RollableItem;
 use crate::util::ensure_len;
 
@@ -47,7 +48,15 @@ impl LootTable {
     ) -> Vec<(Option<&'a Affix>, Option<&'a Affix>, f64)> {
         let modified_combo_chances = (&self.combo_weights.percentage_increase_modify(modifiers)).normalize();
         let result = AffixCombo::iter()
-            .flat_map(|combo| self.resolve_combo(level, combo, modified_combo_chances.get(combo), affix_table_lookup, affix_lookup))
+            .flat_map(|combo| {
+                self.resolve_combo(
+                    level,
+                    combo,
+                    modified_combo_chances.get(combo),
+                    affix_table_lookup,
+                    affix_lookup,
+                )
+            })
             .collect::<Vec<_>>();
         return result;
     }
@@ -61,7 +70,16 @@ impl LootTable {
     ) -> Vec<(Option<&'a Affix>, f64)> {
         let modified_combo_chances = (&self.combo_weights * modifiers).normalize();
         let combos = AffixCombo::iter()
-            .flat_map(|combo| self.resolve_combo_prefix(level, combo, modified_combo_chances.get(combo), affix_table_lookup, affix_lookup).into_iter())
+            .flat_map(|combo| {
+                self.resolve_combo_prefix(
+                    level,
+                    combo,
+                    modified_combo_chances.get(combo),
+                    affix_table_lookup,
+                    affix_lookup,
+                )
+                .into_iter()
+            })
             .collect::<Vec<_>>();
         Self::dedup_opt(combos)
     }
@@ -75,9 +93,39 @@ impl LootTable {
     ) -> Vec<(Option<&'a Affix>, f64)> {
         let modified_combo_chances = (&self.combo_weights * modifiers).normalize();
         let combos = AffixCombo::iter()
-            .flat_map(|combo| self.resolve_combo_suffix(level, combo, modified_combo_chances.get(combo), affix_table_lookup, affix_lookup))
+            .flat_map(|combo| {
+                self.resolve_combo_suffix(
+                    level,
+                    combo,
+                    modified_combo_chances.get(combo),
+                    affix_table_lookup,
+                    affix_lookup,
+                )
+            })
             .collect::<Vec<_>>();
         Self::dedup_opt(combos)
+    }
+
+    pub fn apply_affix_swaps(&mut self, swaps: &[AscensionAffixSwap]) {
+        let overrides = swaps
+            .iter()
+            .flat_map(|swap| {
+                swap.check_list
+                    .iter()
+                    .map(move |check| (check.as_str(), swap.override_table.as_str()))
+            })
+            .collect::<HashMap<_, _>>();
+        let tables = self
+            .prefix_tables
+            .iter_mut()
+            .chain(self.suffix_tables.iter_mut())
+            .chain(self.rare_prefix_tables.iter_mut())
+            .chain(self.rare_suffix_tables.iter_mut());
+        for table in tables {
+            if let Some(override_table) = overrides.get(table.id.as_str()) {
+                table.id = override_table.to_string();
+            }
+        }
     }
 
     fn resolve_combo_prefix<'a>(
@@ -92,12 +140,17 @@ impl LootTable {
             return vec![];
         }
         match combo {
-            AffixCombo::BrokenOnly | AffixCombo::NoPrefixNoSuffix | AffixCombo::SuffixOnly | AffixCombo::RareSuffixOnly => vec![(None, 1.0f64)],
-            AffixCombo::PrefixOnly | AffixCombo::NormalPrefixRareSuffix | AffixCombo::BothPrefixSuffix => self.resolve_magic_prefix(level, affix_table_lookup, affix_lookup)
+            AffixCombo::BrokenOnly
+            | AffixCombo::NoPrefixNoSuffix
+            | AffixCombo::SuffixOnly
+            | AffixCombo::RareSuffixOnly => vec![(None, 1.0f64)],
+            AffixCombo::PrefixOnly | AffixCombo::NormalPrefixRareSuffix | AffixCombo::BothPrefixSuffix => self
+                .resolve_magic_prefix(level, affix_table_lookup, affix_lookup)
                 .into_iter()
                 .map(|(prefix, chance)| (Some(prefix), chance * combo_chance))
                 .collect(),
-            AffixCombo::RarePrefixOnly | AffixCombo::RarePrefixNormalSuffix | AffixCombo::RareBothPrefixSuffix => self.resolve_rare_prefix(level, affix_table_lookup, affix_lookup)
+            AffixCombo::RarePrefixOnly | AffixCombo::RarePrefixNormalSuffix | AffixCombo::RareBothPrefixSuffix => self
+                .resolve_rare_prefix(level, affix_table_lookup, affix_lookup)
                 .into_iter()
                 .map(|(prefix, chance)| (Some(prefix), chance * combo_chance))
                 .collect(),
@@ -116,12 +169,17 @@ impl LootTable {
             return vec![];
         }
         match combo {
-            AffixCombo::BrokenOnly | AffixCombo::NoPrefixNoSuffix | AffixCombo::PrefixOnly | AffixCombo::RarePrefixOnly => vec![(None, 1.0f64)],
-            AffixCombo::SuffixOnly | AffixCombo::RarePrefixNormalSuffix | AffixCombo::BothPrefixSuffix => self.resolve_magic_suffix(level, affix_table_lookup, affix_lookup)
+            AffixCombo::BrokenOnly
+            | AffixCombo::NoPrefixNoSuffix
+            | AffixCombo::PrefixOnly
+            | AffixCombo::RarePrefixOnly => vec![(None, 1.0f64)],
+            AffixCombo::SuffixOnly | AffixCombo::RarePrefixNormalSuffix | AffixCombo::BothPrefixSuffix => self
+                .resolve_magic_suffix(level, affix_table_lookup, affix_lookup)
                 .into_iter()
                 .map(|(suffix, chance)| (Some(suffix), chance * combo_chance))
                 .collect(),
-            AffixCombo::RareSuffixOnly | AffixCombo::NormalPrefixRareSuffix | AffixCombo::RareBothPrefixSuffix => self.resolve_rare_suffix(level, affix_table_lookup, affix_lookup)
+            AffixCombo::RareSuffixOnly | AffixCombo::NormalPrefixRareSuffix | AffixCombo::RareBothPrefixSuffix => self
+                .resolve_rare_suffix(level, affix_table_lookup, affix_lookup)
                 .into_iter()
                 .map(|(suffix, chance)| (Some(suffix), chance * combo_chance))
                 .collect(),
@@ -149,50 +207,82 @@ impl LootTable {
                 .into_iter()
                 .map(|(suffix, chance)| (None, Some(suffix), chance * combo_chance))
                 .collect(),
-            AffixCombo::RarePrefixOnly => Self::dedup(self.resolve_rare_prefix(level, affix_table_lookup, affix_lookup))
-                .into_iter()
-                .map(|(prefix, chance)| (Some(prefix), None, chance * combo_chance))
-                .collect(),
-            AffixCombo::RareSuffixOnly => Self::dedup(self.resolve_rare_suffix(level, affix_table_lookup, affix_lookup))
-                .into_iter()
-                .map(|(suffix, chance)| (None, Some(suffix), chance * combo_chance))
-                .collect(),
+            AffixCombo::RarePrefixOnly => {
+                Self::dedup(self.resolve_rare_prefix(level, affix_table_lookup, affix_lookup))
+                    .into_iter()
+                    .map(|(prefix, chance)| (Some(prefix), None, chance * combo_chance))
+                    .collect()
+            }
+            AffixCombo::RareSuffixOnly => {
+                Self::dedup(self.resolve_rare_suffix(level, affix_table_lookup, affix_lookup))
+                    .into_iter()
+                    .map(|(suffix, chance)| (None, Some(suffix), chance * combo_chance))
+                    .collect()
+            }
             AffixCombo::BothPrefixSuffix => {
                 let prefix_chances = Self::dedup(self.resolve_magic_prefix(level, affix_table_lookup, affix_lookup));
                 let suffix_chances = Self::dedup(self.resolve_magic_suffix(level, affix_table_lookup, affix_lookup));
                 prefix_chances
                     .into_iter()
                     .flat_map(|(prefix, prefix_chance)| {
-                        suffix_chances.iter().map(move |(suffix, suffix_chance)| (Some(prefix), Some(*suffix), prefix_chance * suffix_chance * combo_chance))
-                    }).collect()
-            },
+                        suffix_chances.iter().map(move |(suffix, suffix_chance)| {
+                            (
+                                Some(prefix),
+                                Some(*suffix),
+                                prefix_chance * suffix_chance * combo_chance,
+                            )
+                        })
+                    })
+                    .collect()
+            }
             AffixCombo::NormalPrefixRareSuffix => {
                 let prefix_chances = Self::dedup(self.resolve_magic_prefix(level, affix_table_lookup, affix_lookup));
                 let suffix_chances = Self::dedup(self.resolve_rare_suffix(level, affix_table_lookup, affix_lookup));
                 prefix_chances
                     .into_iter()
                     .flat_map(|(prefix, prefix_chance)| {
-                        suffix_chances.iter().map(move |(suffix, suffix_chance)| (Some(prefix), Some(*suffix), prefix_chance * suffix_chance * combo_chance))
-                    }).collect()
-            },
+                        suffix_chances.iter().map(move |(suffix, suffix_chance)| {
+                            (
+                                Some(prefix),
+                                Some(*suffix),
+                                prefix_chance * suffix_chance * combo_chance,
+                            )
+                        })
+                    })
+                    .collect()
+            }
             AffixCombo::RarePrefixNormalSuffix => {
                 let prefix_chances = Self::dedup(self.resolve_rare_prefix(level, affix_table_lookup, affix_lookup));
                 let suffix_chances = Self::dedup(self.resolve_magic_suffix(level, affix_table_lookup, affix_lookup));
                 prefix_chances
                     .into_iter()
                     .flat_map(|(prefix, prefix_chance)| {
-                        suffix_chances.iter().map(move |(suffix, suffix_chance)| (Some(prefix), Some(*suffix), prefix_chance * suffix_chance * combo_chance))
-                    }).collect()
-            },
+                        suffix_chances.iter().map(move |(suffix, suffix_chance)| {
+                            (
+                                Some(prefix),
+                                Some(*suffix),
+                                prefix_chance * suffix_chance * combo_chance,
+                            )
+                        })
+                    })
+                    .collect()
+            }
             AffixCombo::RareBothPrefixSuffix => {
                 let prefix_chances = Self::dedup(self.resolve_rare_prefix(level, affix_table_lookup, affix_lookup));
                 let suffix_chances = Self::dedup(self.resolve_rare_suffix(level, affix_table_lookup, affix_lookup));
                 prefix_chances
                     .into_iter()
                     .flat_map(|(prefix, prefix_chance)| {
-                        suffix_chances.iter().map(move |(suffix, suffix_chance)| (Some(prefix), Some(*suffix), prefix_chance * suffix_chance * combo_chance))
-                    }).collect()
-            },
+                        suffix_chances.iter().map(move |(suffix, suffix_chance)| {
+                            (
+                                Some(prefix),
+                                Some(*suffix),
+                                prefix_chance * suffix_chance * combo_chance,
+                            )
+                        })
+                    })
+                    .collect()
+            }
         }
     }
 
@@ -238,14 +328,26 @@ impl LootTable {
         affix_table_lookup: &HashMap<String, AffixTable>,
         affix_lookup: &HashMap<String, &'a Affix>,
     ) -> Vec<(&'a Affix, f64)> {
-        let total = rollable_tables.iter()
+        let total = rollable_tables
+            .iter()
             .filter(|rollable| rollable.level_range.contains(&level))
-            .map(|rollable| rollable.weight as f64).sum::<f64>();
+            .map(|rollable| rollable.weight as f64)
+            .sum::<f64>();
         rollable_tables
             .iter()
             .filter(|rollable| rollable.level_range.contains(&level))
-            .map(|rollable| (affix_table_lookup.get(&rollable.id).unwrap(), rollable.weight as f64 / total))
-            .flat_map(|(affix_table, table_chance)| affix_table.resolve(level, affix_lookup).into_iter().map(move |(affix, affix_chance)| (affix, table_chance * affix_chance)))
+            .map(|rollable| {
+                (
+                    affix_table_lookup.get(&rollable.id).unwrap(),
+                    rollable.weight as f64 / total,
+                )
+            })
+            .flat_map(|(affix_table, table_chance)| {
+                affix_table
+                    .resolve(level, affix_lookup)
+                    .into_iter()
+                    .map(move |(affix, affix_chance)| (affix, table_chance * affix_chance))
+            })
             .collect::<Vec<_>>()
     }
 
@@ -264,7 +366,10 @@ impl LootTable {
     fn dedup_opt(results: Vec<(Option<&Affix>, f64)>) -> Vec<(Option<&Affix>, f64)> {
         let mut deduplicated: Vec<(Option<&Affix>, f64)> = vec![];
         for (affix, chance) in results.into_iter() {
-            if let Some((_, prev_chance)) = deduplicated.iter_mut().find(|(dup, _)| dup.is_none() && affix.is_none() || dup.unwrap().id == affix.unwrap().id) {
+            if let Some((_, prev_chance)) = deduplicated
+                .iter_mut()
+                .find(|(dup, _)| dup.is_none() && affix.is_none() || dup.unwrap().id == affix.unwrap().id)
+            {
                 *prev_chance += chance;
             } else {
                 deduplicated.push((affix, chance));
@@ -293,7 +398,12 @@ impl From<&Record> for LootTable {
         let mut combo_weights = AffixComboWeights::new();
         for (key, value) in record.data.iter() {
             if let Ok(affix_combo) = key.parse::<AffixCombo>() {
-                combo_weights.set(affix_combo, value.as_float().expect(&format!("Affix combo {} had value {:?}", key, value)));
+                combo_weights.set(
+                    affix_combo,
+                    value
+                        .as_float()
+                        .expect(&format!("Affix combo {} had value {:?}", key, value)),
+                );
                 continue;
             }
             if key.starts_with(PREFIX_TABLE_NAME) {
@@ -379,42 +489,57 @@ impl From<&Record> for LootTable {
             }
         }
 
-        let loots = loots.into_iter()
+        let loots = loots
+            .into_iter()
             .zip(loot_weights.into_iter())
             .map(|(id, weight)| RollableItem {
-                id, weight, level_range: 0..500,
+                id,
+                weight,
+                level_range: 0..500,
             })
             .collect::<Vec<_>>();
 
-        let prefix_tables = prefix_tables.into_iter()
+        let prefix_tables = prefix_tables
+            .into_iter()
             .zip(prefix_table_weights.into_iter())
             .zip(prefix_table_ranges.into_iter())
             .map(|((id, weight), level_range)| RollableItem {
-                id, weight, level_range,
+                id,
+                weight,
+                level_range,
             })
             .collect::<Vec<_>>();
 
-        let suffix_tables = suffix_tables.into_iter()
+        let suffix_tables = suffix_tables
+            .into_iter()
             .zip(suffix_table_weights.into_iter())
             .zip(suffix_table_ranges.into_iter())
             .map(|((id, weight), level_range)| RollableItem {
-                id, weight, level_range,
+                id,
+                weight,
+                level_range,
             })
             .collect::<Vec<_>>();
 
-        let rare_prefix_tables = rare_prefix_tables.into_iter()
+        let rare_prefix_tables = rare_prefix_tables
+            .into_iter()
             .zip(rare_prefix_table_weights.into_iter())
             .zip(rare_prefix_table_ranges.into_iter())
             .map(|((id, weight), level_range)| RollableItem {
-                id, weight, level_range,
+                id,
+                weight,
+                level_range,
             })
             .collect::<Vec<_>>();
 
-        let rare_suffix_tables = rare_suffix_tables.into_iter()
+        let rare_suffix_tables = rare_suffix_tables
+            .into_iter()
             .zip(rare_suffix_table_weights.into_iter())
             .zip(rare_suffix_table_ranges.into_iter())
             .map(|((id, weight), level_range)| RollableItem {
-                id, weight, level_range,
+                id,
+                weight,
+                level_range,
             })
             .collect::<Vec<_>>();
 

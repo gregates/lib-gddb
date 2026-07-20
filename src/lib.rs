@@ -3,6 +3,7 @@ pub mod affix_combo_weights;
 pub mod affix_table;
 pub mod arc;
 pub mod arz;
+pub mod ascension_affix_swap;
 mod buf_read_ext;
 pub mod item;
 pub mod loot_table;
